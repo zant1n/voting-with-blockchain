@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Voting With Blockchain</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Blockchain Voting System</p>
+          <h1>Transparent, verifiable, and controlled voting</h1>
+          <p class="lead">
+            Connect MetaMask to manage the election, whitelist voters, and cast
+            votes directly against the smart contract on Ganache.
+          </p>
+        </div>
+        <div class="status-card">
+          <span id="connectionStatus">Not connected</span>
+          <strong id="currentAccount">-</strong>
+          <small id="networkStatus">Please connect MetaMask first</small>
+          <button id="connectWalletBtn" class="primary">Connect Wallet</button>
+          <button id="refreshBtn" class="secondary">Refresh</button>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel">
+          <header>
+            <h2>Election Overview</h2>
+            <span id="electionStateBadge" class="badge">Unknown</span>
+          </header>
+          <p><strong>Title:</strong> <span id="electionTitle">-</span></p>
+          <p>
+            <strong>Description:</strong>
+            <span id="electionDescription">-</span>
+          </p>
+          <p><strong>Total Votes:</strong> <span id="totalVotes">0</span></p>
+        </article>
+
+        <article class="panel">
+          <header>
+            <h2>Admin Dashboard</h2>
+            <span id="adminAccessBadge" class="badge muted">Not verified</span>
+          </header>
+
+          <form id="candidateForm" class="stack">
+            <h3>Add Candidate</h3>
+            <input
+              id="candidateName"
+              type="text"
+              placeholder="Candidate name"
+            />
+            <textarea
+              id="candidateManifesto"
+              rows="3"
+              placeholder="Manifesto / Description"
+            ></textarea>
+            <input
+              id="candidateImgHash"
+              type="text"
+              placeholder="Image URL or IPFS hash"
+            />
+            <button type="submit" class="primary">Add Candidate</button>
+          </form>
+
+          <form id="whitelistForm" class="stack">
+            <h3>Whitelist Voter</h3>
+            <input id="voterAddress" type="text" placeholder="0x..." />
+            <button type="submit" class="secondary">Add to Whitelist</button>
+          </form>
+
+          <div class="inline-actions">
+            <button id="startElectionBtn" class="primary">
+              Start Election
+            </button>
+            <button id="closeElectionBtn" class="danger">End Election</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Voter Interface</h2>
+          <span id="eligibilityBadge" class="badge muted"
+            >Waiting for wallet</span
+          >
+        </header>
+        <p id="eligibilityMessage">
+          Connect your wallet to check voting eligibility.
+        </p>
+        <div id="loadingState" class="loading hidden">
+          Waiting for blockchain response...
+        </div>
+        <div id="candidatesGrid" class="candidates-grid"></div>
+      </section>
+
+      <section class="panel">
+        <header>
+          <h2>Results</h2>
+          <span class="badge">Live</span>
+        </header>
+        <div id="resultsGrid" class="results-grid"></div>
+      </section>
+
+      <p id="messageBar" class="message-bar"></p>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
