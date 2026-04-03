@@ -1,25 +1,15 @@
 # voting-with-blockchain
 
-This project is a blockchain voting system built with Solidity, Ganache, and MetaMask. It is split into two parts:
+A beginner-friendly blockchain voting demo built with Solidity, Ganache, MetaMask, and a plain HTML/CSS/JS frontend.
 
-- `Contract/voting.sol`: the smart contract that manages election state, candidates, whitelisted voters, and voting logic
-- `frontend/`: a plain HTML, CSS, and JavaScript frontend that connects to MetaMask, calls the contract, and renders the UI
+This repository has two parts:
 
-## Features
+- `Contract/voting.sol`: the smart contract (election state, candidates, whitelist, voting)
+- `frontend/`: the web UI that connects to MetaMask and calls the contract
 
-### Smart Contract
+## What You Will Build
 
-- Role-based access control: only the `admin` can add candidates, whitelist voters, and start or end the election
-- Whitelist voting: only approved addresses can vote
-- Election lifecycle control: `Setup`, `Active`, and `Closed`
-- Anti-double-voting protection: each address can vote only once
-- Events: `VoteCast`, `CandidateAdded`, `ElectionStarted`, and `ElectionClosed`
-
-### Frontend
-
-- MetaMask connection
-- Admin dashboard for adding candidates, whitelisting voters, and starting or ending the election
-- Voter interface for viewing candidates, checking eligibility, submitting votes, and viewing results
+You will run a local blockchain with Ganache, deploy the voting contract from Remix via MetaMask, connect the frontend to that contract, and test an end-to-end voting flow.
 
 ## Project Structure
 
@@ -33,64 +23,186 @@ frontend/
   app.js
 ```
 
-## Requirements
+## Prerequisites
 
-- Install [Ganache](https://trufflesuite.com/ganache/)
-- Install [MetaMask](https://metamask.io/)
-- Have [Remix IDE](https://remix.ethereum.org/) available
+Install these tools first:
 
-## Phase 1: Deploy the Smart Contract
+1. [Ganache](https://trufflesuite.com/ganache/) (Desktop)
+2. [MetaMask](https://metamask.io/) browser extension
+3. [Remix IDE](https://remix.ethereum.org/) (web app)
+4. Python 3 (optional, only for serving static files)
 
-### 1. Start Ganache
+## Quick Concepts (Important for Beginners)
 
-1. Open Ganache
-2. Create a new local workspace or use the default workspace
-3. Confirm the RPC URL and Chain ID
-4. Copy one account to use as the `admin`
+- Chain ID is required by MetaMask custom networks. It is not always the same thing as Network ID.
+- If Remix shows 0 ETH, you are usually connected to the wrong network/account.
+- For this project, MetaMask must be connected to your Ganache local network.
 
-### 2. Compile and Deploy with Remix
+## Step 1: Start Ganache
 
-1. Open Remix
-2. Import `Contract/voting.sol`
-3. Select a Solidity compiler version in the `0.8.x` range
-4. Connect Remix to `Injected Provider - MetaMask`
-5. Switch MetaMask to the Ganache network
-6. Deploy the contract and provide:
-   - `title`: the election title
-   - `description`: the election description
+1. Open Ganache Desktop.
+2. Create a new workspace (or use Quickstart).
+3. Note these values from Ganache:
+   - RPC URL (common: `http://127.0.0.1:7545`)
+   - Chain ID (common: `1337`)
+4. Keep Ganache running.
 
-### 3. Record the Deployment Data
+### Optional: Verify Chain ID from terminal
 
-After deployment, copy the following into `frontend/config.js`:
+```bash
+curl -s -X POST http://127.0.0.1:7545 \
+  -H "Content-Type: application/json" \
+  --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}'
+```
 
-- Contract address
-- Contract ABI
+If result is `0x539`, your Chain ID is `1337`.
 
-## Phase 2: Run the Frontend
+## Step 2: Add Ganache Network to MetaMask
 
-If you use VS Code Live Server, you can open `frontend/index.html` directly.
+In MetaMask:
 
-If you do not use Live Server, any static server will work. For example:
+1. Open network dropdown.
+2. Click Add a custom network.
+3. Fill fields:
+   - Network name: `Ganache Local`
+   - Default RPC URL: your Ganache RPC (example `http://127.0.0.1:7545`)
+   - Chain ID: from Ganache (example `1337`)
+   - Currency symbol: `ETH`
+   - Block explorer URL: leave empty
+4. Save.
+
+## Step 3: Import a Ganache Account into MetaMask
+
+1. In Ganache, pick one account with test ETH.
+2. Copy its private key.
+3. In MetaMask, click account menu -> Import account.
+4. Paste private key and import.
+5. Switch MetaMask to:
+   - Ganache network
+   - the imported account with balance
+
+If you see `0 ETH`, you are likely on the wrong network or wrong account.
+
+## Step 4: Compile and Deploy Contract from Remix
+
+1. Open [Remix](https://remix.ethereum.org/).
+2. Create/import `Contract/voting.sol`.
+3. Go to Solidity Compiler tab.
+4. Use compiler `0.8.x` and compile.
+5. Go to Deploy & Run Transactions tab.
+6. Set Environment to `Injected Provider - MetaMask`.
+7. In MetaMask popup, approve connection and ensure selected account is your funded Ganache account.
+8. Deploy `VotingSystem` and provide constructor inputs:
+   - `title` (e.g. `Student Council 2026`)
+   - `description` (e.g. `Annual campus election`)
+9. Confirm the transaction in MetaMask.
+
+After successful deploy, copy:
+
+- contract address (from deployed contracts panel)
+- full contract ABI (from Remix Compilation Details -> ABI)
+
+## Step 5: Configure Frontend
+
+Open `frontend/config.js` and update:
+
+- `contractAddress`: paste deployed contract address
+- `contractAbi`: paste ABI array
+
+Example shape:
+
+```javascript
+window.APP_CONFIG = {
+  contractAddress: "0xYourDeployedContractAddress",
+  contractAbi: [
+    // ... ABI objects from Remix
+  ],
+};
+```
+
+## Step 6: Run Frontend
+
+From project root:
 
 ```bash
 python3 -m http.server 5500
 ```
 
-Then open `http://localhost:5500/frontend/`
+Open:
 
-## Phase 3: Test Flow
+`http://localhost:5500/frontend/`
 
-1. Log in to the frontend with the `admin` wallet
-2. Add at least 2 candidates
-3. Add the test voter address to the whitelist
-4. Start the election
-5. Switch to the voter wallet and cast a vote
-6. Try voting again and confirm the error message `You can not double vote!`
-7. End the election and verify that results are displayed
+Then click Connect Wallet in the UI.
 
-## Contract API
+## Step 7: End-to-End Test Scenario
 
-The main contract methods are:
+Use this exact order:
+
+1. Connect as admin account (the deployer).
+2. Add at least 2 candidates.
+3. Add a second Ganache address to whitelist.
+4. Start election.
+5. Switch MetaMask to the whitelisted voter account.
+6. Cast one vote.
+7. Try voting again (should fail with double-vote protection).
+8. Switch back to admin and close election.
+9. Confirm final vote counts in results.
+
+## Common Beginner Issues and Fixes
+
+### 1) Remix shows 0 ETH
+
+- MetaMask is not on Ganache network, or
+- selected MetaMask account is not the imported Ganache account
+
+Fix:
+
+1. Switch MetaMask network to Ganache.
+2. Choose imported funded account.
+3. Reconnect Remix: MetaMask -> Connected sites -> disconnect Remix, then reconnect.
+
+### 2) Cannot select the imported account in Remix
+
+Fix:
+
+1. In MetaMask, switch to desired account first.
+2. Disconnect `remix.ethereum.org` from Connected sites.
+3. Re-open Remix and reconnect; explicitly tick the account during authorization.
+
+### 3) MetaMask rejects custom network
+
+- Chain ID mismatch with RPC endpoint.
+
+Fix:
+
+1. Check Ganache Chain ID.
+2. Verify using `eth_chainId` RPC call.
+3. Recreate network in MetaMask with correct values.
+
+### 4) Frontend says contract config missing
+
+Fix:
+
+- Ensure `frontend/config.js` has a non-empty `contractAddress` and valid `contractAbi` array.
+
+### 5) Transactions fail from frontend
+
+Possible reasons:
+
+- wallet not connected
+- wrong network
+- using non-admin account for admin-only actions
+- election state not correct (Setup/Active/Closed)
+
+## Contract Features
+
+- Admin-only actions: add candidates, whitelist voters, start/close election
+- Whitelist enforcement for voting
+- Election lifecycle states: `Setup`, `Active`, `Closed`
+- One address can vote only once
+- Events: `VoteCast`, `CandidateAdded`, `ElectionStarted`, `ElectionClosed`
+
+## Useful Contract Methods
 
 - `addCandidate(name, manifesto, imgHash)`
 - `addVoterToWhitelist(voter)`
@@ -103,8 +215,8 @@ The main contract methods are:
 - `getTotalVotes()`
 - `isEligibleToVote(voter)`
 
-## Notes
+## Security Notes
 
-- `voteCount` uses `uint256` to avoid overflow issues
-- The old typo `addCandudate` has been fixed to `addCandidate`
-- You must manually fill in the deployed contract ABI and address in `frontend/config.js`
+- Never use Ganache private keys on real/public networks.
+- This project is for local development and learning.
+- Keep MetaMask on local Ganache network while testing.
