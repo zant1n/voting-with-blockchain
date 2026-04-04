@@ -17,6 +17,15 @@ import {
   switchWalletAccount
 } from "@/utils/web3Setup";
 
+const DOUBLE_VOTE_MESSAGE = "You have already voted!!";
+
+function isOpaqueCallFailure(message: string): boolean {
+  return (
+    message.includes("missing revert data") ||
+    (message.includes("CALL_EXCEPTION") && message.includes("estimateGas"))
+  );
+}
+
 function toFriendlyError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
   if (message.includes("Wrong network in MetaMask")) {
@@ -35,7 +44,7 @@ function toFriendlyError(error: unknown): string {
     return "Can not edit candidates while voting is active. End voting first.";
   }
   if (message.includes("You can not double vote") || message.includes("already voted")) {
-    return "You have already voted!";
+    return DOUBLE_VOTE_MESSAGE;
   }
   return message;
 }
@@ -130,12 +139,31 @@ export default function Home() {
         const signer = await refreshedProvider.getSigner();
         const contract = await getVotingContract(signer);
 
+        const alreadyVoted = await contract.hasVoted(account);
+        if (alreadyVoted) {
+          alert(DOUBLE_VOTE_MESSAGE);
+          return;
+        }
+
         const tx = await contract.vote(candidateId);
         await tx.wait();
 
         await loadDashboardData();
       } catch (error) {
-        alert(toFriendlyError(error));
+        const raw = error instanceof Error ? error.message : String(error);
+        let message = toFriendlyError(error);
+        if (message === raw && isOpaqueCallFailure(raw)) {
+          try {
+            const readContract = await getVotingContract();
+            const voted = await readContract.hasVoted(account);
+            if (voted) {
+              message = DOUBLE_VOTE_MESSAGE;
+            }
+          } catch {
+            // keep message
+          }
+        }
+        alert(message);
       } finally {
         setVotingCandidateId(null);
       }
