@@ -1,6 +1,6 @@
 {
   "network": "http://127.0.0.1:8545",
-  "address": "0xe78A0F7E598Cc8b0Bb87894B0F60dD2a88d6a8Ab",
+  "address": "0x9DCE14BA1a097599F365cD38A186eBfA6bF72868",
   "abi": [
     {
       "inputs": [
@@ -12,6 +12,31 @@
       ],
       "stateMutability": "nonpayable",
       "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "candidateId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "imgHash",
+          "type": "string"
+        }
+      ],
+      "name": "CandidateUpdated",
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -30,6 +55,19 @@
         }
       ],
       "name": "VoteCast",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "isActive",
+          "type": "bool"
+        }
+      ],
+      "name": "VotingStatusChanged",
       "type": "event"
     },
     {
@@ -95,6 +133,36 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_candidateId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_name",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_imgHash",
+          "type": "string"
+        }
+      ],
+      "name": "editCandidate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "endVoting",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -177,6 +245,13 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "startVoting",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -188,6 +263,19 @@
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "votingActive",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
   "initialCandidates": [
@@ -195,5 +283,5 @@
     "demouser1",
     "demouser2"
   ],
-  "deployedAt": "2026-04-04T09:50:56.702Z"
+  "deployedAt": "2026-04-04T11:23:09.021Z"
 }

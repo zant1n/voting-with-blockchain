@@ -19,9 +19,19 @@ async function main() {
   const signer = await provider.getSigner(0);
 
   const factory = new ethers.ContractFactory(abi, bytecode, signer);
-  const contract = await factory.deploy(initialCandidates, {
-    gasLimit: 12_000_000,
-  });
+  const latestBlock = await provider.getBlock("latest");
+  const blockGasLimit = latestBlock?.gasLimit ? Number(latestBlock.gasLimit) : 0;
+
+  const estimatedDeployGas = Number(
+    await factory.getDeployTransaction(initialCandidates).then((tx) => signer.estimateGas(tx))
+  );
+
+  // Keep a small headroom below block gas limit for local chains with strict limits.
+  const gasLimit = blockGasLimit > 0
+    ? Math.min(Math.ceil(estimatedDeployGas * 1.2), blockGasLimit - 100_000)
+    : Math.ceil(estimatedDeployGas * 1.2);
+
+  const contract = await factory.deploy(initialCandidates, { gasLimit });
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();

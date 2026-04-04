@@ -1,4 +1,4 @@
-import { BrowserProvider, Contract, JsonRpcSigner } from "ethers";
+import { AbstractProvider, BrowserProvider, Contract, JsonRpcProvider, JsonRpcSigner } from "ethers";
 import contractABI from "./contractABI.json";
 
 declare global {
@@ -24,12 +24,42 @@ export const CONTRACT_ADDRESS =
 export const ADMIN_FALLBACK =
   process.env.NEXT_PUBLIC_ADMIN_ADDRESS || "0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1";
 
-export async function getProvider(): Promise<BrowserProvider> {
-  if (typeof window === "undefined" || !window.ethereum) {
-    throw new Error("MetaMask is not available.");
+export const EXPECTED_CHAIN_ID = Number(process.env.NEXT_PUBLIC_CHAIN_ID || "1337");
+
+export const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "http://127.0.0.1:8545";
+
+function getContractAbi(): unknown[] {
+  const raw = contractABI as unknown;
+
+  if (Array.isArray(raw)) {
+    return raw;
   }
 
-  return new BrowserProvider(window.ethereum);
+  if (raw && typeof raw === "object" && "abi" in raw) {
+    const abi = (raw as { abi?: unknown }).abi;
+    if (Array.isArray(abi)) {
+      return abi;
+    }
+  }
+
+  throw new Error("Invalid contract ABI format. Rebuild and sync contractABI.json.");
+}
+
+function getReadProvider(): AbstractProvider {
+  // Always read from configured RPC to keep dashboard stable even if wallet is on another network.
+  return new JsonRpcProvider(RPC_URL);
+}
+
+export function hasMetaMask(): boolean {
+  return typeof window !== "undefined" && Boolean(window.ethereum);
+}
+
+export async function getProvider(): Promise<BrowserProvider> {
+  if (typeof window === "undefined" || !window.ethereum) {
+    throw new Error("MetaMask is not installed. Install it to vote or add candidates.");
+  }
+
+  return new BrowserProvider(window.ethereum, "any");
 }
 
 export async function getConnectedAccount(): Promise<string | null> {
@@ -41,8 +71,49 @@ export async function getConnectedAccount(): Promise<string | null> {
   return accounts[0] || null;
 }
 
+function toHexChainId(chainId: number): string {
+  return `0x${chainId.toString(16)}`;
+}
+
+export async function ensureExpectedNetwork(provider: BrowserProvider): Promise<void> {
+  if (!EXPECTED_CHAIN_ID) {
+    return;
+  }
+
+  const network = await provider.getNetwork();
+  const currentChainId = Number(network.chainId);
+  if (currentChainId === EXPECTED_CHAIN_ID) {
+    return;
+  }
+
+  const expectedHex = toHexChainId(EXPECTED_CHAIN_ID);
+
+  try {
+    await provider.send("wallet_switchEthereumChain", [{ chainId: expectedHex }]);
+  } catch (error) {
+    const code = (error as { code?: number })?.code;
+    if (code === 4902) {
+      await provider.send("wallet_addEthereumChain", [
+        {
+          chainId: expectedHex,
+          chainName: "Ganache Local",
+          nativeCurrency: {
+            name: "Ether",
+            symbol: "ETH",
+            decimals: 18
+          },
+          rpcUrls: [RPC_URL]
+        }
+      ]);
+      return;
+    }
+    throw error;
+  }
+}
+
 export async function connectWallet(): Promise<string> {
   const provider = await getProvider();
+  await ensureExpectedNetwork(provider);
   const accounts = (await provider.send("eth_requestAccounts", [])) as string[];
   if (!accounts.length) {
     throw new Error("No account returned from wallet.");
@@ -51,21 +122,45 @@ export async function connectWallet(): Promise<string> {
   return accounts[0];
 }
 
+export async function switchWalletAccount(): Promise<string> {
+  const provider = await getProvider();
+  await ensureExpectedNetwork(provider);
+
+  await provider.send("wallet_requestPermissions", [{ eth_accounts: {} }]);
+  const accounts = (await provider.send("eth_requestAccounts", [])) as string[];
+
+  if (!accounts.length) {
+    throw new Error("No account selected.");
+  }
+
+  return accounts[0];
+}
+
 export async function getVotingContract(signer?: JsonRpcSigner): Promise<Contract> {
-  const provider = signer ? signer.provider : await getProvider();
+  const abi = getContractAbi();
+  const provider: AbstractProvider = signer ? signer.provider : getReadProvider();
+  const network = await provider.getNetwork();
+  const chainId = Number(network.chainId);
+
+  if (signer && EXPECTED_CHAIN_ID && chainId !== EXPECTED_CHAIN_ID) {
+    throw new Error(
+      `Wrong network in MetaMask. Current chainId=${chainId}, expected chainId=${EXPECTED_CHAIN_ID}. Switch to Ganache Local (1337).`
+    );
+  }
+
   const code = await provider.getCode(CONTRACT_ADDRESS);
 
   if (!code || code === "0x") {
     throw new Error(
-      `No contract code found at ${CONTRACT_ADDRESS}. Update NEXT_PUBLIC_CONTRACT_ADDRESS to the deployed Remix address.`
+      `No contract code found at ${CONTRACT_ADDRESS} on chainId=${chainId}. Update NEXT_PUBLIC_CONTRACT_ADDRESS to a deployed address on this same chain.`
     );
   }
 
   if (signer) {
-    return new Contract(CONTRACT_ADDRESS, contractABI, signer);
+    return new Contract(CONTRACT_ADDRESS, abi, signer);
   }
 
-  return new Contract(CONTRACT_ADDRESS, contractABI, provider);
+  return new Contract(CONTRACT_ADDRESS, abi, provider);
 }
 
 export function onWalletEvents(
