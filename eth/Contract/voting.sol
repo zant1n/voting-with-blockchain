@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
+// Keep compiler below 0.8.20 for broad Ganache compatibility (avoids PUSH0 opcode).
+pragma solidity <0.8.20;
 
 contract Voting { 
     
@@ -17,9 +19,12 @@ contract Voting {
     mapping(address => bool) public hasVoted;
     Candidate[] public candidates;
     address public admin;
+    bool public votingActive;
 
     
     event VoteCast(address voter, uint candidateId);
+    event VotingStatusChanged(bool isActive);
+    event CandidateUpdated(uint candidateId, string name, string imgHash);
 
     //  Constructor
     constructor(string[] memory _candidateNames) {
@@ -38,6 +43,7 @@ contract Voting {
     //  Vote Function
     function vote(uint _candidateId) public { 
         // Fixed the extra ');' and trailing commas in the require statements
+        require(votingActive, "Voting is not active.");
         require(!hasVoted[msg.sender], "You can not double vote!");
         require(_candidateId < candidates.length, "Invalid candidate ID."); 
 
@@ -67,14 +73,44 @@ contract Voting {
         }
         return TotalVotes;
     }
-    function addCandudate( string memory _name, string memory _imgHash) public {
+    function addCandidate( string memory _name, string memory _imgHash) public {
         require(msg.sender == admin, " only admin can add candidates!");
+        require(!votingActive, "Can not add candidates while voting is active.");
         uint newCandidateId = candidates.length;
         candidates.push(Candidate(
             newCandidateId, 
             _name, 
             _imgHash, 
             0));
+    }
+
+    function editCandidate(uint _candidateId, string memory _name, string memory _imgHash) public {
+        require(msg.sender == admin, " only admin can edit candidates!");
+        require(!votingActive, "Can not edit candidates while voting is active.");
+        require(_candidateId < candidates.length, "Invalid candidate ID.");
+
+        Candidate storage candidate = candidates[_candidateId];
+        candidate.name = _name;
+        candidate.imgHash = _imgHash;
+
+        emit CandidateUpdated(_candidateId, _name, _imgHash);
+    }
+
+    function startVoting() public {
+        require(msg.sender == admin, " only admin can start voting!");
+        require(!votingActive, "Voting is already active.");
+        require(candidates.length > 0, "No candidates available.");
+
+        votingActive = true;
+        emit VotingStatusChanged(true);
+    }
+
+    function endVoting() public {
+        require(msg.sender == admin, " only admin can end voting!");
+        require(votingActive, "Voting is already inactive.");
+
+        votingActive = false;
+        emit VotingStatusChanged(false);
     }
 
 }
