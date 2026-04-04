@@ -1,4 +1,11 @@
-import { AbstractProvider, BrowserProvider, Contract, JsonRpcProvider, JsonRpcSigner } from "ethers";
+import {
+  AbstractProvider,
+  BrowserProvider,
+  Contract,
+  JsonRpcProvider,
+  JsonRpcSigner,
+  type InterfaceAbi
+} from "ethers";
 import contractABI from "./contractABI.json";
 
 declare global {
@@ -15,6 +22,7 @@ export type Candidate = {
   id: number;
   name: string;
   imgHash: string;
+  description: string;
   voteCount: number;
 };
 
@@ -137,7 +145,7 @@ export async function switchWalletAccount(): Promise<string> {
 }
 
 export async function getVotingContract(signer?: JsonRpcSigner): Promise<Contract> {
-  const abi = getContractAbi();
+  const abi = getContractAbi() as InterfaceAbi;
   const provider: AbstractProvider = signer ? signer.provider : getReadProvider();
   const network = await provider.getNetwork();
   const chainId = Number(network.chainId);

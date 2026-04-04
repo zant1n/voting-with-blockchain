@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { getCandidateImageUrl } from "@/utils/candidateMedia";
+
 type CandidateCardProps = {
   id: number;
   name: string;
@@ -8,18 +11,6 @@ type CandidateCardProps = {
   isVotingActive: boolean;
   onVote: (candidateId: number) => Promise<void>;
 };
-
-function getImageUrl(imgHash: string): string {
-  if (!imgHash) {
-    return "https://placehold.co/400x220/e5e7eb/111827?text=Candidate";
-  }
-
-  if (imgHash.startsWith("http://") || imgHash.startsWith("https://")) {
-    return imgHash;
-  }
-
-  return `https://ipfs.io/ipfs/${imgHash}`;
-}
 
 export default function CandidateCard({
   id,
@@ -33,7 +24,7 @@ export default function CandidateCard({
 }: CandidateCardProps) {
   return (
     <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
-      <img src={getImageUrl(imgHash)} alt={name} className="h-52 w-full object-cover" />
+      <img src={getCandidateImageUrl(imgHash)} alt={name} className="h-52 w-full object-cover" />
       <div className="space-y-4 p-5">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Candidate #{id}</p>
@@ -42,6 +33,12 @@ export default function CandidateCard({
         <p className="text-sm text-gray-700">
           Current votes: <span className="font-bold text-gray-900">{voteCount}</span>
         </p>
+        <Link
+          href={`/candidate/${id}`}
+          className="flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
+        >
+          Info
+        </Link>
         <button
           type="button"
           disabled={isVoting || !walletConnected}

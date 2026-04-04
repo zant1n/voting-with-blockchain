@@ -10,6 +10,7 @@ contract Voting {
         uint id;
         string name;
         string imgHash;
+        string description;
         uint8 voteCount;
     }
 
@@ -24,7 +25,7 @@ contract Voting {
     
     event VoteCast(address voter, uint candidateId);
     event VotingStatusChanged(bool isActive);
-    event CandidateUpdated(uint candidateId, string name, string imgHash);
+    event CandidateUpdated(uint candidateId, string name, string imgHash, string description);
 
     //  Constructor
     constructor(string[] memory _candidateNames) {
@@ -34,7 +35,8 @@ contract Voting {
             candidates.push(Candidate({
                 id: i,
                 name: _candidateNames[i],
-                imgHash: "", 
+                imgHash: "",
+                description: "",
                 voteCount: 0
             })); 
         }
@@ -60,11 +62,11 @@ contract Voting {
     }
 
     //  Get Candidate Details
-    function getCandidate(uint _candidateId) public view returns (uint, string memory, string memory, uint8) {
+    function getCandidate(uint _candidateId) public view returns (uint, string memory, string memory, string memory, uint8) {
         require(_candidateId < candidates.length, "Invalid candidate ID.");
         Candidate memory c = candidates[_candidateId];
         
-        return (c.id, c.name, c.imgHash, c.voteCount);
+        return (c.id, c.name, c.imgHash, c.description, c.voteCount);
     }
     function getTotalVotes()public view returns (uint){
         uint TotalVotes = 0;
@@ -73,7 +75,7 @@ contract Voting {
         }
         return TotalVotes;
     }
-    function addCandidate( string memory _name, string memory _imgHash) public {
+    function addCandidate(string memory _name, string memory _imgHash, string memory _description) public {
         require(msg.sender == admin, " only admin can add candidates!");
         require(!votingActive, "Can not add candidates while voting is active.");
         uint newCandidateId = candidates.length;
@@ -81,10 +83,11 @@ contract Voting {
             newCandidateId, 
             _name, 
             _imgHash, 
+            _description,
             0));
     }
 
-    function editCandidate(uint _candidateId, string memory _name, string memory _imgHash) public {
+    function editCandidate(uint _candidateId, string memory _name, string memory _imgHash, string memory _description) public {
         require(msg.sender == admin, " only admin can edit candidates!");
         require(!votingActive, "Can not edit candidates while voting is active.");
         require(_candidateId < candidates.length, "Invalid candidate ID.");
@@ -92,8 +95,9 @@ contract Voting {
         Candidate storage candidate = candidates[_candidateId];
         candidate.name = _name;
         candidate.imgHash = _imgHash;
+        candidate.description = _description;
 
-        emit CandidateUpdated(_candidateId, _name, _imgHash);
+        emit CandidateUpdated(_candidateId, _name, _imgHash, _description);
     }
 
     function startVoting() public {

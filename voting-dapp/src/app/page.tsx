@@ -87,11 +87,12 @@ export default function Home() {
 
       const loadedCandidates: Candidate[] = [];
       for (let i = 0; i < numCandidates; i += 1) {
-        const [id, name, imgHash, voteCount] = await contract.getCandidate(i);
+        const [id, name, imgHash, description, voteCount] = await contract.getCandidate(i);
         loadedCandidates.push({
           id: Number(id),
           name,
           imgHash,
+          description,
           voteCount: Number(voteCount)
         });
       }
@@ -194,7 +195,7 @@ export default function Home() {
   }, [loadDashboardData, walletAvailable]);
 
   const handleAddCandidate = useCallback(
-    async (name: string, imgHash: string) => {
+    async (name: string, imgHash: string, description: string) => {
       if (!isAdmin) {
         alert("Only admin can add candidates.");
         return;
@@ -209,7 +210,7 @@ export default function Home() {
         const signer = await refreshedProvider.getSigner();
         const contract = await getVotingContract(signer);
 
-        const tx = await contract.addCandidate(name, imgHash);
+        const tx = await contract.addCandidate(name, imgHash, description);
         await tx.wait();
 
         await loadDashboardData();
@@ -223,7 +224,7 @@ export default function Home() {
   );
 
   const handleEditCandidate = useCallback(
-    async (id: number, name: string, imgHash: string) => {
+    async (id: number, name: string, imgHash: string, description: string) => {
       if (!isAdmin) {
         alert("Only admin can edit candidates.");
         return;
@@ -236,7 +237,7 @@ export default function Home() {
         const signer = await provider.getSigner();
         const contract = await getVotingContract(signer);
 
-        const tx = await contract.editCandidate(id, name, imgHash);
+        const tx = await contract.editCandidate(id, name, imgHash, description);
         await tx.wait();
 
         await loadDashboardData();

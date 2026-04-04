@@ -3,8 +3,8 @@ import { FormEvent, useState } from "react";
 type AdminPanelProps = {
   isSubmitting: boolean;
   isVotingActive: boolean;
-  onAddCandidate: (name: string, imgHash: string) => Promise<void>;
-  onEditCandidate: (id: number, name: string, imgHash: string) => Promise<void>;
+  onAddCandidate: (name: string, imgHash: string, description: string) => Promise<void>;
+  onEditCandidate: (id: number, name: string, imgHash: string, description: string) => Promise<void>;
   onStartVoting: () => Promise<void>;
   onEndVoting: () => Promise<void>;
 };
@@ -19,9 +19,11 @@ export default function AdminPanel({
 }: AdminPanelProps) {
   const [name, setName] = useState("");
   const [imgHash, setImgHash] = useState("");
+  const [description, setDescription] = useState("");
   const [editId, setEditId] = useState("");
   const [editName, setEditName] = useState("");
   const [editImgHash, setEditImgHash] = useState("");
+  const [editDescription, setEditDescription] = useState("");
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,9 +32,10 @@ export default function AdminPanel({
       return;
     }
 
-    await onAddCandidate(name.trim(), imgHash.trim());
+    await onAddCandidate(name.trim(), imgHash.trim(), description.trim());
     setName("");
     setImgHash("");
+    setDescription("");
   };
 
   const onEditSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -49,10 +52,11 @@ export default function AdminPanel({
       return;
     }
 
-    await onEditCandidate(id, editName.trim(), editImgHash.trim());
+    await onEditCandidate(id, editName.trim(), editImgHash.trim(), editDescription.trim());
     setEditId("");
     setEditName("");
     setEditImgHash("");
+    setEditDescription("");
   };
 
   return (
@@ -82,60 +86,78 @@ export default function AdminPanel({
         </span>
       </div>
 
-      <form onSubmit={onSubmit} className="mt-5 grid gap-3 sm:grid-cols-3">
-        <input
-          type="text"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          placeholder="Candidate name"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+      <form onSubmit={onSubmit} className="mt-5 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <input
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Candidate name"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+          />
+          <input
+            type="text"
+            value={imgHash}
+            onChange={(event) => setImgHash(event.target.value)}
+            placeholder="Image URL or IPFS hash"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting || isVotingActive}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
+          >
+            {isSubmitting ? "Submitting..." : "Add Candidate"}
+          </button>
+        </div>
+        <textarea
+          value={description}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Candidate description (shown on the Info page)"
+          rows={3}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
         />
-        <input
-          type="text"
-          value={imgHash}
-          onChange={(event) => setImgHash(event.target.value)}
-          placeholder="Image URL or IPFS hash"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting || isVotingActive}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
-        >
-          {isSubmitting ? "Submitting..." : "Add Candidate"}
-        </button>
       </form>
 
-      <form onSubmit={onEditSubmit} className="mt-4 grid gap-3 sm:grid-cols-4">
-        <input
-          type="number"
-          min={0}
-          value={editId}
-          onChange={(event) => setEditId(event.target.value)}
-          placeholder="Candidate ID"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+      <form onSubmit={onEditSubmit} className="mt-4 space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <input
+            type="number"
+            min={0}
+            value={editId}
+            onChange={(event) => setEditId(event.target.value)}
+            placeholder="Candidate ID"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+          />
+          <input
+            type="text"
+            value={editName}
+            onChange={(event) => setEditName(event.target.value)}
+            placeholder="New candidate name"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+          />
+          <input
+            type="text"
+            value={editImgHash}
+            onChange={(event) => setEditImgHash(event.target.value)}
+            placeholder="New image URL or IPFS hash"
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
+          />
+          <button
+            type="submit"
+            disabled={isSubmitting || isVotingActive}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
+          >
+            {isSubmitting ? "Submitting..." : "Edit Candidate"}
+          </button>
+        </div>
+        <textarea
+          value={editDescription}
+          onChange={(event) => setEditDescription(event.target.value)}
+          placeholder="New description (Info page)"
+          rows={3}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
         />
-        <input
-          type="text"
-          value={editName}
-          onChange={(event) => setEditName(event.target.value)}
-          placeholder="New candidate name"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
-        />
-        <input
-          type="text"
-          value={editImgHash}
-          onChange={(event) => setEditImgHash(event.target.value)}
-          placeholder="New image URL or IPFS hash"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none ring-blue-200 focus:ring"
-        />
-        <button
-          type="submit"
-          disabled={isSubmitting || isVotingActive}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300"
-        >
-          {isSubmitting ? "Submitting..." : "Edit Candidate"}
-        </button>
       </form>
     </section>
   );
