@@ -4,7 +4,7 @@ type CandidateCardProps = {
   imgHash: string;
   voteCount: number;
   isVoting: boolean;
-  canVote: boolean;
+  walletConnected: boolean;
   isVotingActive: boolean;
   onVote: (candidateId: number) => Promise<void>;
 };
@@ -27,7 +27,7 @@ export default function CandidateCard({
   imgHash,
   voteCount,
   isVoting,
-  canVote,
+  walletConnected,
   isVotingActive,
   onVote
 }: CandidateCardProps) {
@@ -44,13 +44,13 @@ export default function CandidateCard({
         </p>
         <button
           type="button"
-          disabled={isVoting || !canVote}
+          disabled={isVoting || !walletConnected}
           onClick={() => onVote(id)}
           className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-400"
         >
           {isVoting
             ? "Loading..."
-            : canVote
+            : walletConnected
               ? "Vote"
               : isVotingActive
                 ? "Connect MetaMask to Vote"

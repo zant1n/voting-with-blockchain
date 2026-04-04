@@ -128,6 +128,10 @@ export default function Home() {
         alert("Please connect MetaMask before voting.");
         return;
       }
+      if (!isVotingActive) {
+        alert("The election has not yet started");
+        return;
+      }
 
       setVotingCandidateId(candidateId);
       try {
@@ -168,7 +172,7 @@ export default function Home() {
         setVotingCandidateId(null);
       }
     },
-    [account, loadDashboardData]
+    [account, isVotingActive, loadDashboardData]
   );
 
   const handleSwitchAccount = useCallback(async () => {
@@ -379,7 +383,7 @@ export default function Home() {
                 imgHash={candidate.imgHash}
                 voteCount={candidate.voteCount}
                 isVoting={votingCandidateId === candidate.id}
-                canVote={Boolean(account) && isVotingActive}
+                walletConnected={Boolean(account)}
                 isVotingActive={isVotingActive}
                 onVote={handleVote}
               />
