@@ -20,14 +20,14 @@ npm run deploy:local
 1. Start local Ganache on `127.0.0.1:8545`.
 2. Open Remix and load `eth/Contract/voting.sol`.
 3. Compile with Solidity compiler `0.8.19` (do not use 0.8.20+).
-	- In Advanced Configuration, set EVM Version to `paris` or `london`.
+   - In Advanced Configuration, set EVM Version to `paris` or `london`.
 4. In Deploy & Run Transactions:
-	- Environment: `Dev - Ganache Provider`
-	- Provider URL: `http://127.0.0.1:8545`
-	- Constructor argument (`string[]`): `["admin","demouser1","demouser2"]`
+   - Environment: `Dev - Ganache Provider`
+   - Provider URL: `http://127.0.0.1:8545`
+   - Constructor argument (`string[]`): `["admin","demouser1","demouser2"]`
 5. Deploy and copy:
-	- Deployed contract address
-	- ABI JSON from Remix compiler output
+   - Deployed contract address
+   - ABI JSON from Remix compiler output
 
 ## Frontend (Next.js + Tailwind)
 
