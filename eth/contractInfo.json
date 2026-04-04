@@ -1,6 +1,6 @@
 {
   "network": "http://127.0.0.1:8545",
-  "address": "0x9DCE14BA1a097599F365cD38A186eBfA6bF72868",
+  "address": "0x8856deF60D582D87DceE798e483A7566AbBc93A9",
   "abi": [
     {
       "inputs": [
@@ -283,5 +283,5 @@
     "demouser1",
     "demouser2"
   ],
-  "deployedAt": "2026-04-04T11:23:09.021Z"
+  "deployedAt": "2026-04-04T20:38:22.209Z"
 }
