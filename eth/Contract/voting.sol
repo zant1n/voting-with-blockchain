@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0;
+// Keep compiler below 0.8.20 for broad Ganache compatibility (avoids PUSH0 opcode).
+pragma solidity <0.8.20;
 
 contract Voting { 
     
@@ -67,7 +69,7 @@ contract Voting {
         }
         return TotalVotes;
     }
-    function addCandudate( string memory _name, string memory _imgHash) public {
+    function addCandidate( string memory _name, string memory _imgHash) public {
         require(msg.sender == admin, " only admin can add candidates!");
         uint newCandidateId = candidates.length;
         candidates.push(Candidate(

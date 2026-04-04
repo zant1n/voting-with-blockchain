@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const solc = require('solc');
 //define the path of files
 const buildPath = path.resolve(__dirname, 'build');
-const contractPath = path.resolve(__dirname, 'contracts', 'Voting.sol');
+const contractPath = path.resolve(__dirname, 'Contract', 'voting.sol');
 //remove old build folder
 fs.removeSync(buildPath);
 
@@ -32,7 +32,7 @@ const compiledCode = JSON.parse(solc.compile(JSON.stringify(input)));
 if (compiledCode.errors){
     let hasError = false;
     compiledCode.errors.forEach((Err) => {
-        console.errors(Err.formattedMessage);
+        console.error(Err.formattedMessage);
         if (Err.severity === 'error') hasError = true;
     });
     if (hasError) process.exit(1);
@@ -41,9 +41,10 @@ if (compiledCode.errors){
 fs.ensureDirSync(buildPath);
 
 //output file to build.
-for(let contract in output) {
+const contracts = compiledCode.contracts['Voting.sol'] || {};
+for(let contract in contracts) {
 	fs.outputJsonSync(
 		path.resolve(buildPath,contract.replace(':','') +  '.json'), 
-		output[contract]
+        contracts[contract]
 	);
 }
