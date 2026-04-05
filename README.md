@@ -33,10 +33,7 @@ Install these tools first:
 Open terminal in project root, then run:
 
 ```bash
-cd eth
-npm install
-cd ../voting-dapp
-npm install
+npm run setup
 ```
 
 ## 4. Start Ganache
@@ -47,51 +44,10 @@ npm install
 
 Important:
 
-- Chain ID should be `1337`.
+- Chain ID/NETWORK ID should be `1337`.
 - If Ganache shows a different chain, update `.env.local` and MetaMask accordingly.
 
-## 5. Compile and Deploy Contract (Recommended)
-
-Use the built-in scripts:
-
-```bash
-cd eth
-npm run compile
-npm run deploy:local
-```
-
-After deployment:
-
-1. Check `eth/contractInfo.json`.
-2. Copy the `address` value.
-3. Use that address in frontend `.env.local`.
-
-## 6. Configure Frontend Environment
-
-Create local env file in `voting-dapp/`:
-
-- PowerShell:
-
-```powershell
-Copy-Item .env.example .env.local
-```
-
-- Bash/macOS/Linux:
-
-```bash
-cp .env.example .env.local
-```
-
-Then edit `voting-dapp/.env.local` with your latest values:
-
-```env
-NEXT_PUBLIC_CONTRACT_ADDRESS=<your latest deployed contract address>
-NEXT_PUBLIC_ADMIN_ADDRESS=<your Ganache admin account address>
-NEXT_PUBLIC_CHAIN_ID=1337
-NEXT_PUBLIC_RPC_URL=http://127.0.0.1:8545
-```
-
-## 7. Add Ganache Network in MetaMask
+## 5. Add Ganache Network in MetaMask
 
 In MetaMask -> Add network manually:
 
@@ -101,18 +57,17 @@ In MetaMask -> Add network manually:
 4. Symbol: `ETH`
 5. Block Explorer URL: leave empty
 
-Then import/select a Ganache account that has ETH.
+In account -> add wallet -> import/select a Ganache account that has ETH.
 
-## 8. Run Frontend
+## 6. Run Frontend
 
 ```bash
-cd voting-dapp
 npm run dev
 ```
-
+Enter a Ganache account address as admin address in terminal
 Open `http://localhost:3000`.
 
-## 9. How to Use the App
+## 7. How to Use the App
 
 ### Student / Voter Flow
 
@@ -135,7 +90,7 @@ Rules:
 - Voting must be active for users to vote.
 - Add/Edit candidate is disabled while voting is active.
 
-## 10. Common Errors and Fixes
+## 8. Common Errors and Fixes
 
 ### A) `No contract code found at ...`
 
@@ -176,7 +131,7 @@ Fix:
 1. Accept MetaMask network switch first.
 2. Retry the transaction.
 
-## 11. Optional: Deploy via Remix (Manual)
+## 9. Optional: Deploy via Remix (Manual)
 
 If you prefer Remix:
 
@@ -193,7 +148,7 @@ If you prefer Remix:
 6. Copy deployed address + ABI.
 7. Update frontend env and ABI accordingly.
 
-## 12. Quick Re-Run Checklist
+## 10. Quick Re-Run Checklist
 
 If your classmate says "it does not work", check these 5 items first:
 
