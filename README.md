@@ -65,6 +65,7 @@ In account -> add wallet -> import/select a Ganache account that has ETH.
 npm run dev
 ```
 Enter a Ganache account address as admin address in terminal
+
 Open `http://localhost:3000`.
 
 ## 7. How to Use the App
