@@ -17,7 +17,23 @@ import {
   switchWalletAccount
 } from "@/utils/web3Setup";
 
+type LastElectionPanel = {
+  headline: string;
+  rows: { candidateId: number; name: string; votes: number }[];
+};
+
 const DOUBLE_VOTE_MESSAGE = "You have already voted!!";
+
+function winnerAnnouncementFromEvent(winnerIds: number[], maxVotes: number, names: string[]): string {
+  if (winnerIds.length === 0) {
+    return "Voting ended. There were no candidates on the ballot.";
+  }
+  const voteWord = maxVotes === 1 ? "vote" : "votes";
+  if (names.length === 1) {
+    return `Winner: ${names[0]} with ${maxVotes} ${voteWord}.`;
+  }
+  return `It's a tie between ${names.length} candidates: ${names.join(", ")} (${maxVotes} ${voteWord} each).`;
+}
 
 function isOpaqueCallFailure(message: string): boolean {
   return (
@@ -61,6 +77,7 @@ export default function Home() {
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
   const [isAdminSubmitting, setIsAdminSubmitting] = useState<boolean>(false);
   const [votingCandidateId, setVotingCandidateId] = useState<number | null>(null);
+  const [lastElection, setLastElection] = useState<LastElectionPanel | null>(null);
 
   const isAdmin = useMemo(() => {
     if (!account || !adminAddress) {
@@ -97,6 +114,37 @@ export default function Home() {
         });
       }
       setCandidates(loadedCandidates);
+
+      try {
+        const snap = await contract.getLastElectionSnapshot();
+        const counts = snap.counts as bigint[];
+        const winners = snap.winners as bigint[];
+        const maxVotes = Number(snap.maxVotes);
+
+        if (!counts.length) {
+          setLastElection(null);
+        } else {
+          const n = Math.min(counts.length, loadedCandidates.length);
+          const rows = [];
+          for (let i = 0; i < n; i += 1) {
+            rows.push({
+              candidateId: i,
+              name: loadedCandidates[i]?.name ?? `Candidate #${i}`,
+              votes: Number(counts[i])
+            });
+          }
+          const winnerIds = winners.map((w) => Number(w));
+          const winnerNames = winnerIds.map(
+            (wid) => loadedCandidates[wid]?.name ?? `Candidate #${wid}`
+          );
+          setLastElection({
+            headline: winnerAnnouncementFromEvent(winnerIds, maxVotes, winnerNames),
+            rows
+          });
+        }
+      } catch {
+        setLastElection(null);
+      }
     } catch (error) {
       console.error(error);
       alert(`Failed to load contract data: ${toFriendlyError(error)}`);
@@ -144,7 +192,7 @@ export default function Home() {
         const signer = await refreshedProvider.getSigner();
         const contract = await getVotingContract(signer);
 
-        const alreadyVoted = await contract.hasVoted(account);
+        const alreadyVoted = await contract.hasVotedThisElection(account);
         if (alreadyVoted) {
           alert(DOUBLE_VOTE_MESSAGE);
           return;
@@ -160,7 +208,7 @@ export default function Home() {
         if (message === raw && isOpaqueCallFailure(raw)) {
           try {
             const readContract = await getVotingContract();
-            const voted = await readContract.hasVoted(account);
+            const voted = await readContract.hasVotedThisElection(account);
             if (voted) {
               message = DOUBLE_VOTE_MESSAGE;
             }
@@ -339,22 +387,51 @@ export default function Home() {
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <header className="mb-8 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Election Dashboard</h2>
-          <p className="mt-2 text-sm text-gray-600">Total Votes Cast</p>
-          <p className="mt-1 text-4xl font-black text-blue-600">{totalVotes}</p>
-          <p className="mt-2 text-sm font-semibold text-gray-700">
-            Voting Status: {isVotingActive ? "Active" : "Inactive"}
-          </p>
-          {!walletAvailable && (
-            <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-              Read-only mode is active. Install MetaMask to vote and add candidates.
-            </p>
-          )}
-          {walletAvailable && !account && (
-            <p className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
-              Connect MetaMask to vote. Admin account can also add candidates.
-            </p>
-          )}
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-2xl font-bold text-gray-900">Election Dashboard</h2>
+              <p className="mt-2 text-sm text-gray-600">Total Votes Cast (current round)</p>
+              <p className="mt-1 text-4xl font-black text-blue-600">{totalVotes}</p>
+              <p className="mt-2 text-sm font-semibold text-gray-700">
+                Voting Status: {isVotingActive ? "Active" : "Inactive"}
+              </p>
+              {!walletAvailable && (
+                <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  Read-only mode is active. Install MetaMask to vote and add candidates.
+                </p>
+              )}
+              {walletAvailable && !account && (
+                <p className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800">
+                  Connect MetaMask to vote. Admin account can also add candidates.
+                </p>
+              )}
+            </div>
+
+            {lastElection && (
+              <div className="w-full shrink-0 rounded-xl border border-blue-100 bg-gradient-to-b from-blue-50 to-white p-5 shadow-inner lg:max-w-md">
+                <h3 className="text-sm font-bold uppercase tracking-wide text-blue-900">
+                  Last election results
+                </h3>
+                <p className="mt-2 text-base font-semibold text-gray-900">{lastElection.headline}</p>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  Vote count by candidate
+                </p>
+                <ul className="mt-2 divide-y divide-gray-200 border-t border-gray-200">
+                  {lastElection.rows.map((row) => (
+                    <li
+                      key={row.candidateId}
+                      className="flex items-center justify-between gap-3 py-2 text-sm text-gray-800"
+                    >
+                      <span className="font-medium">
+                        #{row.candidateId} {row.name}
+                      </span>
+                      <span className="tabular-nums font-bold text-blue-700">{row.votes}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </header>
 
         {isAdmin && (
