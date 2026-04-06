@@ -1,46 +1,12 @@
-export interface CandidateImage {
-  id: number;
-  name: string;
-  imageUrl: string;
-  fallbackUrl: string;
-}
+export const candidateImageUrls: { [key: number]: string } = {
+  0: "/images/candidate0.svg",  // Cinderella for Alice Johnson
+  1: "/images/candidate1.svg",  // Prince Charming for Bob Smith
+  2: "/images/candidate2.svg",  // Belle for Carol Davis
+  3: "/images/candidate3.svg",  // Aladdin for David Wilson
+};
 
-
-export const candidateImages: CandidateImage[] = [
-  {
-    id: 0,
-    name: "Alice Johnson",
-    imageUrl: "/images/candidate0.jpg",
-    fallbackUrl: "https://via.placeholder.com/300x300/FF6B6B/FFFFFF?text=Alice"
-  },
-  {
-    id: 1,
-    name: "Bob Smith",
-    imageUrl: "/images/candidate1.jpg",
-    fallbackUrl: "https://via.placeholder.com/300x300/4ECDC4/FFFFFF?text=Bob"
-  },
-  {
-    id: 2,
-    name: "Carol Davis",
-    imageUrl: "/images/candidate2.jpg",
-    fallbackUrl: "https://via.placeholder.com/300x300/45B7D1/FFFFFF?text=Carol"
-  },
-  {
-    id: 3,
-    name: "David Wilson",
-    imageUrl: "/images/candidate3.jpg",
-    fallbackUrl: "https://via.placeholder.com/300x300/96CEB4/FFFFFF?text=David"
-  }
-];
-
+export const defaultImageUrl = "/images/default.svg";
 
 export function getCandidateImageUrl(candidateId: number): string {
-  const candidate = candidateImages.find(c => c.id === candidateId);
-  return candidate?.imageUrl || `/images/default.jpg`;
-}
-
-
-export function getFallbackImageUrl(candidateId: number): string {
-  const candidate = candidateImages.find(c => c.id === candidateId);
-  return candidate?.fallbackUrl || "https://via.placeholder.com/300x300/CCCCCC/FFFFFF?text=Candidate";
+  return candidateImageUrls[candidateId] || defaultImageUrl;
 }
