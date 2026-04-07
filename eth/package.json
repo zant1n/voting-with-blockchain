@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "compile": "node compile.js",
-    "deploy:local": "node deploy.js"
+    "sync:dapp": "node sync-dapp-abi.js",
+    "compile": "node compile.js && node sync-dapp-abi.js",
+    "deploy:local": "node deploy.js && node sync-dapp-abi.js"
   },
   "dependencies": {
     "ethers": "^6.13.2",

@@ -24,6 +24,73 @@ type LastElectionPanel = {
 
 const DOUBLE_VOTE_MESSAGE = "You have already voted!!";
 
+function toFiniteNumber(value: unknown, fallback = 0): number {
+  const numeric =
+    typeof value === "bigint"
+      ? Number(value)
+      : typeof value === "number"
+        ? value
+        : Number(value);
+  return Number.isFinite(numeric) ? numeric : fallback;
+}
+
+async function hasVotedForCurrentElection(contract: unknown, account: string): Promise<boolean> {
+  const c = contract as Record<string, unknown>;
+  const hasVotedThisElection = c["hasVotedThisElection"];
+  if (typeof hasVotedThisElection === "function") {
+    try {
+      return Boolean(await (hasVotedThisElection as (addr: string) => Promise<unknown>)(account));
+    } catch {
+      // ABI might include method that deployed contract doesn't implement; fall back below.
+    }
+  }
+
+  const hasVoted = c["hasVoted"];
+  if (typeof hasVoted === "function") {
+    try {
+      return Boolean(await (hasVoted as (addr: string) => Promise<unknown>)(account));
+    } catch {
+      // If this also fails, skip pre-check and let the vote tx tell us.
+    }
+  }
+
+  return false;
+}
+
+function parseCandidateResult(raw: unknown): {
+  id: number;
+  name: string;
+  imgHash: string;
+  description: string;
+  voteCount: number;
+} {
+  const arr = Array.isArray(raw) ? raw : [];
+
+  // Newer contract: (id, name, imgHash, description, voteCount)
+  if (arr.length >= 5) {
+    return {
+      id: toFiniteNumber(arr[0], 0),
+      name: typeof arr[1] === "string" ? arr[1] : String(arr[1] ?? ""),
+      imgHash: typeof arr[2] === "string" ? arr[2] : String(arr[2] ?? ""),
+      description: typeof arr[3] === "string" ? arr[3] : String(arr[3] ?? ""),
+      voteCount: toFiniteNumber(arr[4], 0)
+    };
+  }
+
+  // Older contract: (id, name, imgHash, voteCount)
+  if (arr.length === 4) {
+    return {
+      id: toFiniteNumber(arr[0], 0),
+      name: typeof arr[1] === "string" ? arr[1] : String(arr[1] ?? ""),
+      imgHash: typeof arr[2] === "string" ? arr[2] : String(arr[2] ?? ""),
+      description: "",
+      voteCount: toFiniteNumber(arr[3], 0)
+    };
+  }
+
+  return { id: 0, name: "", imgHash: "", description: "", voteCount: 0 };
+}
+
 function winnerAnnouncementFromEvent(winnerIds: number[], maxVotes: number, names: string[]): string {
   if (winnerIds.length === 0) {
     return "Voting ended. There were no candidates on the ballot.";
@@ -97,20 +164,21 @@ export default function Home() {
         contract.votingActive().catch(() => false)
       ]);
 
-      const numCandidates = Number(numCandidatesRaw);
+      const numCandidates = toFiniteNumber(numCandidatesRaw, 0);
       setAdminAddress(chainAdmin || ADMIN_FALLBACK);
       setIsVotingActive(Boolean(votingStatus));
-      setTotalVotes(Number(totalVotesRaw));
+      setTotalVotes(toFiniteNumber(totalVotesRaw, 0));
 
       const loadedCandidates: Candidate[] = [];
       for (let i = 0; i < numCandidates; i += 1) {
-        const [id, name, imgHash, description, voteCount] = await contract.getCandidate(i);
+        const rawCandidate = await contract.getCandidate(i);
+        const parsed = parseCandidateResult(rawCandidate);
         loadedCandidates.push({
-          id: Number(id),
-          name,
-          imgHash,
-          description,
-          voteCount: Number(voteCount)
+          id: parsed.id || i,
+          name: parsed.name,
+          imgHash: parsed.imgHash,
+          description: parsed.description,
+          voteCount: parsed.voteCount
         });
       }
       setCandidates(loadedCandidates);
@@ -119,7 +187,7 @@ export default function Home() {
         const snap = await contract.getLastElectionSnapshot();
         const counts = snap.counts as bigint[];
         const winners = snap.winners as bigint[];
-        const maxVotes = Number(snap.maxVotes);
+        const maxVotes = toFiniteNumber(snap.maxVotes, 0);
 
         if (!counts.length) {
           setLastElection(null);
@@ -130,10 +198,10 @@ export default function Home() {
             rows.push({
               candidateId: i,
               name: loadedCandidates[i]?.name ?? `Candidate #${i}`,
-              votes: Number(counts[i])
+              votes: toFiniteNumber(counts[i], 0)
             });
           }
-          const winnerIds = winners.map((w) => Number(w));
+          const winnerIds = winners.map((w) => toFiniteNumber(w, 0));
           const winnerNames = winnerIds.map(
             (wid) => loadedCandidates[wid]?.name ?? `Candidate #${wid}`
           );
@@ -192,7 +260,7 @@ export default function Home() {
         const signer = await refreshedProvider.getSigner();
         const contract = await getVotingContract(signer);
 
-        const alreadyVoted = await contract.hasVotedThisElection(account);
+        const alreadyVoted = await hasVotedForCurrentElection(contract, account);
         if (alreadyVoted) {
           alert(DOUBLE_VOTE_MESSAGE);
           return;
