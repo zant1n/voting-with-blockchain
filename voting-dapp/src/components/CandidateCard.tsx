@@ -1,25 +1,29 @@
 import { useState } from 'react';
-import { getCandidateImageUrl } from '@/utils/candidateImages';
+import { getCandidateImageUrl } from '@/utils/candidateMedia';
 
 interface CandidateCardProps {
   id: number;
   name: string;
+  imgHash: string;
   voteCount: number;
-  onVote: () => void;
-  isConnected: boolean;
+  onVote: (candidateId: number) => void;
+  walletConnected: boolean;
+  isVoting: boolean;
   isVotingActive: boolean;
 }
 
 export default function CandidateCard({
   id,
   name,
+  imgHash,
   voteCount,
   onVote,
-  isConnected,
+  walletConnected,
+  isVoting,
   isVotingActive
 }: CandidateCardProps) {
   const [imgError, setImgError] = useState(false);
-  const imageUrl = getCandidateImageUrl(id);
+  const imageUrl = getCandidateImageUrl(imgHash || id);
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
@@ -49,19 +53,21 @@ export default function CandidateCard({
         </div>
         
         <button
-          onClick={onVote}
-          disabled={!isConnected || !isVotingActive}
+          onClick={() => onVote(id)}
+          disabled={!walletConnected || !isVotingActive || isVoting}
           className={`w-full py-2 px-4 rounded-lg font-semibold transition-all duration-300 ${
-            isConnected && isVotingActive
+            walletConnected && isVotingActive && !isVoting
               ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white cursor-pointer'
               : 'bg-gray-300 text-gray-500 cursor-not-allowed'
           }`}
         >
-          {!isConnected 
+          {!walletConnected 
             ? 'Connect Wallet' 
             : !isVotingActive 
               ? 'Voting Closed' 
-              : 'Vote Now'}
+              : isVoting
+                ? 'Submitting...'
+                : 'Vote Now'}
         </button>
       </div>
     </div>

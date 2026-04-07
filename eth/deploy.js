@@ -35,10 +35,12 @@ async function main() {
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
+  const adminAddress = await signer.getAddress();
 
   const output = {
     network: rpcUrl,
     address,
+    adminAddress,
     abi,
     initialCandidates,
     deployedAt: new Date().toISOString(),
@@ -50,6 +52,7 @@ async function main() {
 
   console.log("Contract deployed successfully");
   console.log(`Address: ${address}`);
+  console.log(`Admin: ${adminAddress}`);
   console.log(`Candidates: ${initialCandidates.join(", ")}`);
   console.log("Saved: eth/contractInfo.json");
 }

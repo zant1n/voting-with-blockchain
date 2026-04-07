@@ -1,0 +1,7 @@
+{
+  "name": "voting-with-blockchain-workspace",
+  "private": true,
+  "scripts": {
+    "setup": "node scripts/setup.js"
+  }
+}
