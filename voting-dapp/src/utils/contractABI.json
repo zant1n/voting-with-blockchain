@@ -30,6 +30,12 @@
         "internalType": "string",
         "name": "imgHash",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
       }
     ],
     "name": "CandidateUpdated",
@@ -59,6 +65,31 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "uint256[]",
+        "name": "winnerIds",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "maxVoteCount",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8[]",
+        "name": "finalVoteCounts",
+        "type": "uint8[]"
+      }
+    ],
+    "name": "VotingEnded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "bool",
         "name": "isActive",
         "type": "bool"
@@ -77,6 +108,11 @@
       {
         "internalType": "string",
         "name": "_imgHash",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_description",
         "type": "string"
       }
     ],
@@ -124,6 +160,11 @@
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "description",
+        "type": "string"
+      },
+      {
         "internalType": "uint8",
         "name": "voteCount",
         "type": "uint8"
@@ -148,11 +189,29 @@
         "internalType": "string",
         "name": "_imgHash",
         "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_description",
+        "type": "string"
       }
     ],
     "name": "editCandidate",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "electionId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -188,8 +247,36 @@
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
         "internalType": "uint8",
         "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getLastElectionSnapshot",
+    "outputs": [
+      {
+        "internalType": "uint8[]",
+        "name": "counts",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "winners",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint8",
+        "name": "maxVotes",
         "type": "uint8"
       }
     ],
@@ -226,16 +313,67 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "voter",
         "type": "address"
       }
     ],
-    "name": "hasVoted",
+    "name": "hasVotedThisElection",
     "outputs": [
       {
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "lastEndedMaxVotes",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastEndedVoteCounts",
+    "outputs": [
+      {
+        "internalType": "uint8",
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "lastEndedWinnerIds",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -259,6 +397,25 @@
     "name": "vote",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "voterElectionId",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {

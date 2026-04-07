@@ -28,16 +28,20 @@ Install these tools first:
   - Next.js frontend
   - Reads contract address from `.env.local`
 
-## 3. First-Time Setup
+## 3. First-Time Setup (One Command)
 
 Open terminal in project root, then run:
 
 ```bash
-cd eth
-npm install
-cd ../voting-dapp
-npm install
+npm run setup
 ```
+
+This single command will automatically:
+
+1. Install dependencies in `eth/` and `voting-dapp/`
+2. Compile and deploy the contract to local Ganache
+3. Sync ABI to `voting-dapp/src/utils/contractABI.json`
+4. Generate/update `voting-dapp/.env.local` with latest contract address/admin/rpc
 
 ## 4. Start Ganache
 
@@ -50,7 +54,7 @@ Important:
 - Chain ID should be `1337`.
 - If Ganache shows a different chain, update `.env.local` and MetaMask accordingly.
 
-## 5. Compile and Deploy Contract (Recommended)
+## 5. Compile and Deploy Contract (Manual, Optional)
 
 Use the built-in scripts:
 
